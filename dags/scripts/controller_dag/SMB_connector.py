@@ -9,10 +9,11 @@ def get_measurements(init_time, iteration):
 
     username = os.environ.get("SMB_USERNAME")
     password = os.environ.get("SMB_PASSWORD")
+    my_name = os.environ.get("SMB_MY_NAME")
     server = os.environ.get("SMB_SERVER")
     server_ip = os.environ.get("SMB_IP")
 
-    conn = SMBConnection(username, password, "", server)
+    conn = SMBConnection(username, password, my_name, server)
     status = conn.connect(server_ip, 139)
 
     # convert init_time to GMT-3 and calculate the start time of the experiment
@@ -22,11 +23,11 @@ def get_measurements(init_time, iteration):
     if status:
         br_name = "BioFlo"
 
-        nodered_file_path = "Node_Red/Datos/Prueba3.csv"
-        nodered_variables = ["Time", "pH", "Temperature"]
+        nodered_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/pruebaFede.csv"
+        nodered_variables = ["time", "pH", "temperature"]
 
-        others_file_path = "Test.csv"
-        others_variables = ["Time", "Biomass"]
+        others_file_path = "/ExperimentosBioFlo/ExperimentBioFlo01_09042026/measurements_atline.csv"
+        others_variables = ["t", "biomass", "glucose"]
 
         root_dir = f"data/it_{iteration}"
 
@@ -45,7 +46,7 @@ def get_measurements(init_time, iteration):
         # read nodered measurements
         try:
             with open(f"{root_dir}/nodered_output.csv", "wb") as f:
-                conn.retrieveFile("LabCompartido", nodered_file_path, f)
+                conn.retrieveFile("Users", nodered_file_path, f)
 
             df_node = pd.read_csv(f"{root_dir}/nodered_output.csv", delimiter=';', names=nodered_variables)
         except Exception as e:
@@ -62,7 +63,7 @@ def get_measurements(init_time, iteration):
         # NODERED: iterate through rows and fill JSON file
         for row in df_node.itertuples():
             row_dict = row._asdict()
-            measurement_time = round((datetime.strptime(start_time.strftime("%Y-%m-%d") + " " + row_dict["Time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=gmt_minus_3) - start_time).total_seconds() / 3600, 4)
+            measurement_time = round((datetime.strptime(start_time.strftime("%Y-%m-%d") + " " + row_dict["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=gmt_minus_3) - start_time).total_seconds() / 3600, 4)
 
             for measurement_type in nodered_variables[1:]:
                 json_data[br_name]["measurements_aggregated"][measurement_type]["measurement_time"].append(measurement_time)
@@ -72,7 +73,7 @@ def get_measurements(init_time, iteration):
         # OTHERS: iterate through rows and fill JSON file
         for row in df_others.itertuples():
             row_dict = row._asdict()
-            measurement_time = datetime.strptime(start_time.strftime("%Y-%m-%d") + " " + row_dict["Time"], "%Y-%m-%d %H:%M:%S")
+            measurement_time = datetime.strptime(start_time.strftime("%Y-%m-%d") + " " + row_dict["t"], "%Y-%m-%d %H:%M:%S")
 
             for measurement_type in others_variables[1:]:
                 json_data[br_name]["measurements_aggregated"][measurement_type]["measurement_time"].append(measurement_time)
@@ -84,3 +85,6 @@ def get_measurements(init_time, iteration):
         
     else:
         print("Connection failed")
+
+
+get_measurements("2026-04-07T10:35:50", 1)
