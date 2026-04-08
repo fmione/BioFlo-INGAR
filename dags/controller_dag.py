@@ -51,8 +51,7 @@ with DAG(
 
     start = EmptyOperator(task_id="start")  
 
-    last_node = start  
-    
+    last_node = start      
 
     # iterations every hour to group tasks
     for hours in range(1, int(t_duration) + 1):
@@ -66,7 +65,7 @@ with DAG(
         get_data = base_docker_node(
             task_id=f"get_data_{hours}_hour{'s' if hours > 1 else ''}",
             image="smb_connector",
-            command=["python", "-c", f"from SMB_connector import get_measurements; get_measurements('{dag.start_date}', {hours})"],
+            command=["python", "-c", f"from SMB_connector import get_measurements; get_measurements('{{{{ dag_run.get_task_instance('start').start_date }}}}', {hours})"],
         )
 
         last_node >> wait_update >> get_data
