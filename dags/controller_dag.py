@@ -59,7 +59,7 @@ with DAG(
         wait_update = TimeDeltaSensor(
             task_id=f"wait_{hours}_hour{'s' if hours > 1 else ''}",
             poke_interval=10, trigger_rule='all_done',
-            delta=dt.timedelta(minutes=hours) #TODO: change to hours in production
+            delta=dt.timedelta(hours=hours)
         )
 
         get_data = base_docker_node(

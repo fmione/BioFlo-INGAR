@@ -32,7 +32,7 @@ def get_measurements(init_time, iteration):
     gmt_minus_3 = timezone(timedelta(hours=-3))    
     start_time = datetime.fromisoformat(init_time).astimezone(gmt_minus_3)
 
-    nodered_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/pruebaFede.csv"
+    nodered_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/ExperimentBioFlo01_09042026.csv"
     nodered_variables = ["t", "pH", "temperature"]
 
     others_file_path = "/ExperimentosBioFlo/ExperimentBioFlo01_09042026/measurements_atline.csv"
