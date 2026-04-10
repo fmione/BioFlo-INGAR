@@ -32,7 +32,7 @@ def get_measurements(init_time, iteration):
     gmt_minus_3 = timezone(timedelta(hours=-3))    
     start_time = datetime.fromisoformat(init_time).astimezone(gmt_minus_3)
 
-    nodered_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/ExperimentBioFlo01_09042026.csv"
+    nodered_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/Exp_BioFlow_9_04.csv"
     nodered_variables = ["t", "pH", "temperature"]
 
     others_file_path = "/ExperimentosBioFlo/ExperimentBioFlo01_09042026/measurements_atline.csv"
@@ -109,7 +109,7 @@ def process_times(start_time, df_measurements, variables):
 
     df = df_measurements.copy()
 
-    df["time_obj"] = pd.to_datetime(df["t"], format="%H:%M:%S").dt.time
+    df["time_obj"] = pd.to_datetime(df["t"]).dt.time
 
     # detect rollover and create day offset
     df["rollover"] = (df["time_obj"] < df["time_obj"].shift(1)).astype(int)
