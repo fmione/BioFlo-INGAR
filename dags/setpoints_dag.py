@@ -10,8 +10,8 @@ from docker.types import Mount
 
 
 with DAG(
-        dag_id="BioFlo_DAG",
-        description="DAG to extract data from the BioFlo experiment.",
+        dag_id="Setpoints_BioFlo_DAG",
+        description="DAG to test setpoints in the BioFlo bioreactor.",
         start_date=dt.datetime.now(),
         schedule_interval=None,
         catchup=False,
@@ -25,9 +25,6 @@ with DAG(
         host_path = os.environ.get("DAGS_DIR", "./dags")
 
     remote_path = "/opt/airflow/dags"
-
-    # duration of the experiment in hours
-    t_duration = 24 
 
 
     def base_docker_node(task_id, command, retries=0, retry_delay=dt.timedelta(minutes=2),
@@ -50,22 +47,35 @@ with DAG(
         )
 
     start = EmptyOperator(task_id="start")  
-    last_node = start      
 
-    # iterations every hour to group tasks
-    for hours in range(1, int(t_duration) + 1):
+    save_profile_1 = base_docker_node(
+        task_id=f"save_profile_1",
+        image="smb_connector",
+        command=["python", "-c", f"from SMB_connector import save_setpoints; save_setpoints('setpoints/Pump_profile1.json')"],
+    )
 
-        wait_update = TimeDeltaSensor(
-            task_id=f"wait_{hours}_hour{'s' if hours > 1 else ''}",
-            poke_interval=10, trigger_rule='all_done',
-            delta=dt.timedelta(hours=hours)
-        )
+    wait_1 = TimeDeltaSensor(
+        task_id=f"wait_30_min",
+        poke_interval=10, trigger_rule='all_done',
+        delta=dt.timedelta(minutes=30)
+    )
 
-        get_data = base_docker_node(
-            task_id=f"get_data_{hours}_hour{'s' if hours > 1 else ''}",
-            image="smb_connector",
-            command=["python", "-c", f"from SMB_connector import get_measurements; get_measurements('{{{{ dag_run.get_task_instance('start').start_date }}}}', {hours})"],
-        )
+    save_profile_2 = base_docker_node(
+        task_id=f"save_profile_2",
+        image="smb_connector",
+        command=["python", "-c", f"from SMB_connector import save_setpoints; save_setpoints('setpoints/Pump_profile2.json')"],
+    )
 
-        last_node >> wait_update >> get_data
-        last_node = wait_update
+    wait_2 = TimeDeltaSensor(
+        task_id=f"wait_50_min",
+        poke_interval=10, trigger_rule='all_done',
+        delta=dt.timedelta(minutes=50)
+    )
+
+    save_profile_3 = base_docker_node(
+        task_id=f"save_profile_3",
+        image="smb_connector",
+        command=["python", "-c", f"from SMB_connector import save_setpoints; save_setpoints('setpoints/Pump_profile3.json')"],
+    )
+
+    start >> save_profile_1 >> wait_1 >> save_profile_2 >> wait_2 >> save_profile_3

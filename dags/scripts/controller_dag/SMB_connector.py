@@ -5,12 +5,9 @@ from datetime import datetime, timedelta, timezone
 from smb.SMBConnection import SMBConnection
 
 
-def get_measurements(init_time, iteration):
+def server_connection():
     """
-    Connects to the SMB server, retrieves measurement files, processes them, and saves the aggregated data in JSON format.
-    Parameters:
-        - init_time: The start time of the experiment in ISO format (e.g., "2024-09-04T12:00:00").
-        - iteration: The iteration number for the experiment.
+    Manage the connection to the SMB server using credentials from environment variables.
     """
 
     username = os.environ.get("SMB_USERNAME")
@@ -24,8 +21,24 @@ def get_measurements(init_time, iteration):
         conn.connect(server_ip, 139)
     except Exception as e:
         print(f"Error connecting to SMB server: {e}")
-        return
+        conn = None
     
+    return conn
+
+
+def get_measurements(init_time, iteration):
+    """
+    Connects to the SMB server, retrieves measurement files, processes them, and saves the aggregated data in JSON format.
+    Parameters:
+        - init_time: The start time of the experiment in ISO format (e.g., "2024-09-04T12:00:00").
+        - iteration: The iteration number for the experiment.
+    """
+
+    conn = server_connection()
+    if conn is None:
+        print("Failed to connect to SMB server.")
+        return
+
     br_name = "BioFlo"
 
     # convert init_time to GMT-3 and calculate the start time of the experiment
@@ -97,7 +110,6 @@ def get_measurements(init_time, iteration):
         json.dump(json_data, file)
     
 
-
 def process_times(start_time, df_measurements, variables):
     """
     Processes the time column in the measurements DataFrame to calculate the delta in hours from the start time of the experiment.
@@ -136,3 +148,24 @@ def process_times(start_time, df_measurements, variables):
     df = df.drop(columns=["time_obj", "rollover", "day_offset"])
 
     return df
+
+
+def save_setpoints(file_path):
+    """
+    Connects to the SMB server and save the setpoints file in JSON format.
+    """
+
+    conn = server_connection()
+    if conn is None:
+        print("Failed to connect to SMB server.")
+        return
+    
+    pumps_file_path = "/danilo/Documents/PublicNodeRed/lab_doc/docs/Conf_bombas.json"
+
+    with open(file_path, "rb") as f:
+        conn.storeFile("Users", pumps_file_path, f)
+
+
+# from dotenv import load_dotenv
+# load_dotenv() 
+# save_setpoints("setpoints/Conf_bombas.json")
