@@ -42,7 +42,7 @@ with DAG(
             environment=os.environ,
             mounts=[Mount(source=host_path, target=remote_path, type='bind')],
             mount_tmp_dir=False,
-            network_mode="bridge", # check this in Linux
+            network_mode="lab-network",
             retries=retries,
             retry_delay=retry_delay,
             execution_timeout=execution_timeout,

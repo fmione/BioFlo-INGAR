@@ -90,7 +90,9 @@ services:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 5s
       retries: 5
-    restart: always
+    restart: no
+    networks:
+    - lab-network
 
   redis:
     image: redis:latest
@@ -101,7 +103,9 @@ services:
       interval: 5s
       timeout: 30s
       retries: 50
-    restart: always
+    restart: no
+    networks:
+    - lab-network
 
   airflow-webserver:
     <<: *airflow-common
@@ -113,7 +117,9 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: no
+    networks:
+    - lab-network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -127,7 +133,9 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: no
+    networks:
+    - lab-network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -148,7 +156,9 @@ services:
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
-    restart: always
+    restart: no
+    networks:
+    - lab-network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -162,7 +172,9 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: no
+    networks:
+    - lab-network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -245,6 +257,8 @@ services:
     user: "0:0"
     volumes:
       - .:/sources
+    networks:
+    - lab-network
 
   airflow-cli:
     <<: *airflow-common
@@ -258,6 +272,8 @@ services:
       - bash
       - -c
       - airflow
+    networks:
+    - lab-network
 
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
@@ -274,7 +290,9 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: no
+    networks:
+    - lab-network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -285,8 +303,16 @@ services:
     image: smb_connector
     build:
       context: images/smb_connector
-      dockerfile: Dockerfile  
-
+      dockerfile: Dockerfile
+    networks:
+    - lab-network
 
 volumes:
   postgres-db-volume:
+
+networks:
+  lab-network:
+    external: true
+    # name: lab-network
+    # driver: bridge
+
