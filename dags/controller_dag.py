@@ -40,6 +40,7 @@ with DAG(
             working_dir=f"{remote_path}/scripts/controller_dag",
             command=command,
             environment=os.environ,
+            user=os.getenv("AIRFLOW_UID", "root"),
             mounts=[Mount(source=host_path, target=remote_path, type='bind')],
             mount_tmp_dir=False,
             network_mode="lab-network",
